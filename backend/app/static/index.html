@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShadowTrace Command Console</title>
+    <link rel="stylesheet" href="/static/styles/dashboard.css?v=4" />
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <div class="dashboard-noise"></div>
+      <aside class="dashboard-sidebar">
+        <div>
+          <div class="brand-panel reveal">
+            <div class="brand-mark">ST</div>
+            <div>
+              <p class="brand-kicker">Forensic Security</p>
+              <h1 class="brand-title">ShadowTrace</h1>
+              <p class="brand-subtitle">Controlled phishing telemetry and cryptographic evidence command center.</p>
+            </div>
+          </div>
+
+          <nav class="nav-panel reveal">
+            <button class="nav-link active" data-view="overview">
+              <span>Overview</span>
+              <small>Mission status</small>
+            </button>
+            <button class="nav-link" data-view="campaigns">
+              <span>Campaigns</span>
+              <small>Registry and launch</small>
+            </button>
+            <button class="nav-link" data-view="incidents">
+              <span>Incidents</span>
+              <small>Suspicious activity</small>
+            </button>
+            <button class="nav-link" data-view="evidence">
+              <span>Evidence</span>
+              <small>Verification and reports</small>
+            </button>
+            <button class="nav-link" data-view="audit">
+              <span>Audit</span>
+              <small>Hash-chained trail</small>
+            </button>
+          </nav>
+        </div>
+
+        <div class="sidebar-footer reveal">
+          <p class="footer-label">Session</p>
+          <p id="session-user" class="footer-value">Not authenticated</p>
+          <button id="logout-button" class="logout-button">Sign out</button>
+        </div>
+      </aside>
+
+      <main class="dashboard-main">
+        <header class="hero-panel reveal">
+          <div>
+            <p class="hero-kicker">Tamper-Proof Phishing Detection</p>
+            <h2 class="hero-title">High-confidence incident reconstruction with signed, verifiable evidence.</h2>
+            <p class="hero-copy">
+              ShadowTrace correlates simulated phishing interactions, seals suspicious incidents into encrypted evidence,
+              and produces signed forensic reports with a visible audit trail.
+            </p>
+          </div>
+          <div class="hero-status-card">
+            <div class="hero-status">
+              <span class="status-dot"></span>
+              <span id="connection-status">Awaiting authentication</span>
+            </div>
+            <p class="hero-mini-copy">This dashboard updates directly from the FastAPI backend and evidence vault.</p>
+          </div>
+        </header>
+
+        <section id="feedback-banner" class="feedback-banner hidden"></section>
+
+        <section id="overview-view" class="view-section">
+          <div id="stats-grid" class="stats-grid reveal"></div>
+        </section>
+
+        <section id="campaigns-view" class="view-section hidden">
+          <div class="panel reveal">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Campaign Registry</p>
+                <h3 class="panel-title">Operational campaigns</h3>
+              </div>
+            </div>
+
+            <div class="campaign-layout">
+              <form id="campaign-form" class="campaign-form">
+                <div class="campaign-form-grid">
+                  <label class="field-label">
+                    <span>Campaign Name</span>
+                    <input id="campaign-name-input" class="text-input" type="text" placeholder="HR Benefits Refresh" required />
+                  </label>
+                  <label class="field-label">
+                    <span>Target Email</span>
+                    <input id="campaign-target-input" class="text-input" type="email" placeholder="employee@company.com" />
+                  </label>
+                </div>
+                <label class="field-label">
+                  <span>Description</span>
+                  <textarea
+                    id="campaign-description-input"
+                    class="text-input textarea-input"
+                    placeholder="Controlled phishing simulation for the ShadowTrace dashboard flow"
+                    rows="3"
+                  ></textarea>
+                </label>
+                <div class="campaign-form-actions">
+                  <button type="submit" class="primary-button">Create Campaign</button>
+                  <p class="helper-inline">A phishing landing-page link will be generated immediately for demo use.</p>
+                </div>
+              </form>
+
+              <div id="campaign-link-card" class="campaign-link-card hidden">
+                <p class="panel-kicker">Latest Campaign Link</p>
+                <h4 class="verify-title">Phishing simulation URL</h4>
+                <p id="campaign-link-value" class="link-value">No campaign created yet.</p>
+                <div class="campaign-link-actions">
+                  <button id="copy-link-button" type="button" class="verify-button">Copy Link</button>
+                  <a id="open-link-button" class="verify-button inline-link-button" href="#" target="_blank" rel="noreferrer">
+                    Open Page
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Target</th>
+                    <th>Events</th>
+                    <th>Suspicious</th>
+                    <th>Evidence</th>
+                    <th>Compromised</th>
+                    <th>Latest Activity</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="campaigns-table-body"></tbody>
+              </table>
+            </div>
+
+            <div id="timeline-card" class="timeline-card hidden">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">Campaign Timeline</p>
+                  <h3 id="timeline-title" class="panel-title">Select a campaign</h3>
+                </div>
+                <div class="timeline-actions">
+                  <button id="timeline-copy-link-button" type="button" class="verify-button">Copy Link</button>
+                  <button id="timeline-open-link-button" type="button" class="verify-button">Open Page</button>
+                </div>
+              </div>
+
+              <div class="timeline-meta-grid">
+                <div class="metric-chip">
+                  <span class="metric-chip-label">Target</span>
+                  <span id="timeline-target" class="metric-chip-value">-</span>
+                </div>
+                <div class="metric-chip">
+                  <span class="metric-chip-label">Status</span>
+                  <span id="timeline-status" class="metric-chip-value">-</span>
+                </div>
+                <div class="metric-chip">
+                  <span class="metric-chip-label">Events</span>
+                  <span id="timeline-event-count" class="metric-chip-value">-</span>
+                </div>
+                <div class="metric-chip">
+                  <span class="metric-chip-label">Suspicious</span>
+                  <span id="timeline-suspicious-count" class="metric-chip-value">-</span>
+                </div>
+              </div>
+
+              <div class="timeline-layout">
+                <div>
+                  <p class="panel-kicker">Event Sequence</p>
+                  <div id="timeline-events" class="timeline-stream"></div>
+                </div>
+                <div>
+                  <p class="panel-kicker">Evidence Linked</p>
+                  <div id="timeline-evidence" class="timeline-evidence-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="incidents-view" class="view-section hidden">
+          <div class="panel reveal">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Incident Stream</p>
+                <h3 class="panel-title">Suspicious activity timeline</h3>
+              </div>
+            </div>
+            <div id="incidents-list" class="incident-list"></div>
+          </div>
+        </section>
+
+        <section id="evidence-view" class="view-section hidden">
+          <div class="panel reveal">
+            <div class="panel-header evidence-header">
+              <div>
+                <p class="panel-kicker">Evidence Vault</p>
+                <h3 class="panel-title">Review and verify sealed evidence</h3>
+              </div>
+              <label class="field-label">
+                <span>Campaign</span>
+                <select id="campaign-selector" class="select-input"></select>
+              </label>
+            </div>
+
+            <div class="evidence-layout">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Summary</th>
+                      <th>Status</th>
+                      <th>Hash</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="evidence-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="verify-panel">
+                <p class="panel-kicker">Integrity Check</p>
+                <h4 class="verify-title">Verification result</h4>
+                <div id="verification-empty" class="empty-state">
+                  Select a sealed evidence record to run a cryptographic verification check.
+                </div>
+                <div id="verification-result" class="hidden">
+                  <div class="verify-pill-row">
+                    <span id="verification-status-pill" class="status-pill">Unknown</span>
+                  </div>
+                  <dl class="verify-grid">
+                    <div>
+                      <dt>Evidence ID</dt>
+                      <dd id="verify-evidence-id">-</dd>
+                    </div>
+                    <div>
+                      <dt>Campaign ID</dt>
+                      <dd id="verify-campaign-id">-</dd>
+                    </div>
+                    <div>
+                      <dt>Stored Hash</dt>
+                      <dd id="verify-stored-hash">-</dd>
+                    </div>
+                    <div>
+                      <dt>Calculated Hash</dt>
+                      <dd id="verify-calculated-hash">-</dd>
+                    </div>
+                    <div>
+                      <dt>Verified At</dt>
+                      <dd id="verify-timestamp">-</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="report-divider"></div>
+
+                <div class="report-panel">
+                  <p class="panel-kicker">Incident Report</p>
+                  <h4 class="verify-title">Signed export</h4>
+                  <div class="report-actions">
+                    <button id="generate-report-button" type="button" class="primary-button">Generate Report</button>
+                    <button id="download-report-button" type="button" class="verify-button">Download JSON</button>
+                  </div>
+                  <div id="report-empty" class="empty-state">
+                    Generate a signed forensic report for the currently selected campaign.
+                  </div>
+                  <div id="report-result" class="hidden">
+                    <dl class="verify-grid">
+                      <div>
+                        <dt>Report Hash</dt>
+                        <dd id="report-hash">-</dd>
+                      </div>
+                      <div>
+                        <dt>Evidence Status</dt>
+                        <dd id="report-evidence-status">-</dd>
+                      </div>
+                      <div>
+                        <dt>Signature</dt>
+                        <dd id="report-signature">-</dd>
+                      </div>
+                      <div>
+                        <dt>Generated At</dt>
+                        <dd id="report-generated-at">-</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="audit-view" class="view-section hidden">
+          <div class="panel reveal">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Audit Chain</p>
+                <h3 class="panel-title">Recent forensic audit actions</h3>
+              </div>
+            </div>
+
+            <div id="audit-stats-grid" class="audit-stats-grid"></div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>Details</th>
+                    <th>Prev Hash</th>
+                    <th>Current Hash</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="login-overlay" class="login-overlay">
+      <div class="login-card reveal">
+        <p class="panel-kicker">Restricted Access</p>
+        <h2 class="login-title">Sign in to ShadowTrace</h2>
+        <p class="login-copy">
+          Use your analyst or admin credentials to inspect campaigns, incidents, evidence verification results, and audit trails.
+        </p>
+
+        <form id="login-form" class="login-form">
+          <label class="field-label">
+            <span>Email</span>
+            <input id="email-input" class="text-input" type="email" placeholder="admin@gmail.com" required />
+          </label>
+          <label class="field-label">
+            <span>Password</span>
+            <input id="password-input" class="text-input" type="password" placeholder="Enter your password" required />
+          </label>
+          <button type="submit" class="primary-button">Enter Command Console</button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="/static/js/app.js?v=5"></script>
+  </body>
+</html>

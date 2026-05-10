@@ -1,0 +1,159 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1217;
+  --card: rgba(17, 24, 31, 0.9);
+  --line: rgba(198, 166, 107, 0.16);
+  --text: #f2ece1;
+  --muted: #9ea8b3;
+  --gold: #c6a66b;
+  --gold-soft: rgba(198, 166, 107, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(198, 166, 107, 0.14), transparent 24%),
+    radial-gradient(circle at left center, rgba(47, 93, 80, 0.1), transparent 22%),
+    linear-gradient(140deg, #0d1217, #121920 52%, #0d1116);
+}
+
+.page-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.hero-card {
+  width: min(1120px, 100%);
+  display: grid;
+  grid-template-columns: 1.1fr minmax(320px, 420px);
+  gap: 22px;
+  padding: 28px;
+  border-radius: 30px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(18px);
+}
+
+.result-card {
+  grid-template-columns: 1fr;
+  max-width: 840px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--gold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+.hero-copy h1,
+.panel-top h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.05;
+}
+
+.hero-copy h1 {
+  margin: 14px 0;
+  font-size: clamp(2.1rem, 4vw, 3.7rem);
+}
+
+.hero-copy p,
+.bullet-list li,
+.helper-text {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.bullet-list {
+  margin: 24px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.login-panel {
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(11, 16, 20, 0.66);
+}
+
+.panel-top h2 {
+  margin: 8px 0 18px;
+  font-size: 2rem;
+}
+
+.login-panel label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.login-panel span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.login-panel input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  outline: none;
+}
+
+.login-panel input:focus {
+  border-color: rgba(198, 166, 107, 0.48);
+  box-shadow: 0 0 0 4px rgba(198, 166, 107, 0.12);
+}
+
+.login-panel button,
+.return-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(198, 166, 107, 0.28);
+  background: linear-gradient(180deg, rgba(198, 166, 107, 0.3), rgba(198, 166, 107, 0.16));
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.login-panel button:hover,
+.return-link:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(198, 166, 107, 0.38), rgba(198, 166, 107, 0.22));
+}
+
+.helper-text {
+  margin-top: 14px;
+  font-size: 0.9rem;
+}
+
+.return-link {
+  margin-top: 22px;
+  width: fit-content;
+}
+
+@media (max-width: 880px) {
+  .hero-card {
+    grid-template-columns: 1fr;
+  }
+}
