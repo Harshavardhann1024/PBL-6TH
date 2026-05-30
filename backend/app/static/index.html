@@ -41,12 +41,17 @@
               <span>Audit</span>
               <small>Hash-chained trail</small>
             </button>
+            <button class="nav-link" data-view="users" id="nav-users" style="display:none">
+              <span>Users</span>
+              <small>Access management</small>
+            </button>
           </nav>
         </div>
 
         <div class="sidebar-footer reveal">
           <p class="footer-label">Session</p>
           <p id="session-user" class="footer-value">Not authenticated</p>
+          <span id="role-badge" class="role-badge"></span>
           <button id="logout-button" class="logout-button">Sign out</button>
         </div>
       </aside>
@@ -273,6 +278,7 @@
                   <div class="report-actions">
                     <button id="generate-report-button" type="button" class="primary-button">Generate Report</button>
                     <button id="download-report-button" type="button" class="verify-button">Download JSON</button>
+                    <button id="download-pdf-button" type="button" class="verify-button btn-pdf">Download PDF</button>
                   </div>
                   <div id="report-empty" class="empty-state">
                     Generate a signed forensic report for the currently selected campaign.
@@ -327,6 +333,33 @@
                   </tr>
                 </thead>
                 <tbody id="audit-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="users-view" class="view-section hidden">
+          <div class="panel reveal">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Access Control</p>
+                <h3 class="panel-title">User management</h3>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body"></tbody>
               </table>
             </div>
           </div>

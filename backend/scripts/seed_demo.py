@@ -130,7 +130,7 @@ def main() -> None:
         email="admin@gmail.com",
         full_name="ShadowTrace Admin",
         password="ShadowTrace123",
-        role=UserRole.admin,
+        role=UserRole.super_admin,
     )
     ensure_user(
         email="analyst@shadowtrace.local",
@@ -149,6 +149,12 @@ def main() -> None:
         full_name="Demo Employee",
         password="ShadowTrace123",
         role=UserRole.employee,
+    )
+    ensure_user(
+        email="viewer@shadowtrace.local",
+        full_name="Read-Only Viewer",
+        password="ShadowTrace123",
+        role=UserRole.viewer,
     )
 
     campaign = ensure_demo_campaign(created_by_id=admin.id)

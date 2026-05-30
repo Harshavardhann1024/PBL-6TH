@@ -783,3 +783,93 @@ a {
     border-radius: 24px;
   }
 }
+
+/* ── Role badges ─────────────────────────────────────────────────────── */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 12px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.role-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.role-badge.role-super_admin {
+  color: #fde5b1;
+  background: rgba(208, 178, 122, 0.18);
+  border: 1px solid rgba(208, 178, 122, 0.28);
+}
+.role-badge.role-super_admin::before { background: #d0b27a; }
+
+.role-badge.role-admin {
+  color: #fde5b1;
+  background: rgba(208, 155, 60, 0.16);
+  border: 1px solid rgba(208, 155, 60, 0.26);
+}
+.role-badge.role-admin::before { background: #d09b3c; }
+
+.role-badge.role-analyst {
+  color: #dbfff4;
+  background: rgba(82, 160, 136, 0.16);
+  border: 1px solid rgba(82, 160, 136, 0.26);
+}
+.role-badge.role-analyst::before { background: #52a088; }
+
+.role-badge.role-viewer {
+  color: #ebedf0;
+  background: rgba(126, 140, 159, 0.16);
+  border: 1px solid rgba(126, 140, 159, 0.24);
+}
+.role-badge.role-viewer::before { background: #7e8c9f; }
+
+.role-badge.role-employee {
+  color: #ebedf0;
+  background: rgba(126, 140, 159, 0.12);
+  border: 1px solid rgba(126, 140, 159, 0.18);
+}
+.role-badge.role-employee::before { background: #6b7685; }
+
+/* ── PDF download button ─────────────────────────────────────────────── */
+.btn-pdf {
+  background: linear-gradient(180deg, rgba(202, 101, 81, 0.28), rgba(202, 101, 81, 0.12));
+  border-color: rgba(202, 101, 81, 0.22);
+}
+
+.btn-pdf:hover {
+  background: linear-gradient(180deg, rgba(202, 101, 81, 0.40), rgba(202, 101, 81, 0.20));
+  border-color: rgba(202, 101, 81, 0.36);
+}
+
+/* ── Role change select in users table ───────────────────────────────── */
+.role-change-select {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.role-change-select:focus {
+  border-color: rgba(208, 178, 122, 0.38);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.role-change-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -20,3 +20,7 @@ class UserRead(BaseModel):
     email: EmailStr
     role: UserRole
     created_at: datetime
+
+
+class UserRoleUpdate(BaseModel):
+    role: UserRole

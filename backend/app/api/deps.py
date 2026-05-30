@@ -57,3 +57,10 @@ def require_roles(*allowed_roles: str) -> Callable[[User], User]:
         return current_user
 
     return role_checker
+
+
+# Pre-built RBAC dependency shortcuts
+require_viewer_plus = require_roles("super_admin", "admin", "analyst", "viewer")
+require_analyst_plus = require_roles("super_admin", "admin", "analyst")
+require_admin_plus = require_roles("super_admin", "admin")
+require_super_admin = require_roles("super_admin")

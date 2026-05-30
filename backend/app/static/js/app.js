@@ -1,6 +1,7 @@
 const state = {
   token: localStorage.getItem("shadowtrace_token") || "",
   user: localStorage.getItem("shadowtrace_user") || "",
+  role: localStorage.getItem("shadowtrace_role") || "",
   campaigns: [],
   overview: null,
   incidents: [],
@@ -11,6 +12,7 @@ const state = {
   evidence: [],
   latestCampaignLink: "",
   latestReport: null,
+  users: [],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -56,6 +58,7 @@ const elements = {
   verifyTimestamp: $("verify-timestamp"),
   generateReportButton: $("generate-report-button"),
   downloadReportButton: $("download-report-button"),
+  downloadPdfButton: $("download-pdf-button"),
   reportEmpty: $("report-empty"),
   reportResult: $("report-result"),
   reportHash: $("report-hash"),
@@ -64,6 +67,9 @@ const elements = {
   reportGeneratedAt: $("report-generated-at"),
   auditStatsGrid: $("audit-stats-grid"),
   auditTableBody: $("audit-table-body"),
+  roleBadge: $("role-badge"),
+  navUsers: $("nav-users"),
+  usersTableBody: $("users-table-body"),
 };
 
 const navButtons = Array.from(document.querySelectorAll("[data-view]"));
@@ -73,7 +79,18 @@ const views = {
   incidents: $("incidents-view"),
   evidence: $("evidence-view"),
   audit: $("audit-view"),
+  users: $("users-view"),
 };
+
+const ROLE_LABELS = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  analyst: "Analyst",
+  viewer: "Viewer",
+  employee: "Employee",
+};
+
+const ALL_ROLES = ["super_admin", "admin", "analyst", "viewer", "employee"];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -120,6 +137,41 @@ function setSessionState(authenticated) {
   elements.loginOverlay.classList.toggle("hidden", authenticated);
   elements.sessionUser.textContent = authenticated ? state.user : "Not authenticated";
   elements.connectionStatus.textContent = authenticated ? "Secure channel active" : "Awaiting authentication";
+  updateRoleBadge();
+  applyRoleVisibility();
+}
+
+function updateRoleBadge() {
+  const badge = elements.roleBadge;
+  if (!state.role) {
+    badge.textContent = "";
+    badge.className = "role-badge";
+    return;
+  }
+  badge.textContent = ROLE_LABELS[state.role] || state.role;
+  badge.className = `role-badge role-${state.role}`;
+}
+
+function applyRoleVisibility() {
+  const role = state.role;
+  const isViewer = role === "viewer";
+  const isSuperAdmin = role === "super_admin";
+  const isAdminPlus = ["super_admin", "admin"].includes(role);
+
+  // Users tab: only super_admin and admin
+  if (elements.navUsers) {
+    elements.navUsers.style.display = isAdminPlus ? "" : "none";
+  }
+
+  // Campaign create form: hide for viewer
+  const campaignForm = elements.campaignForm;
+  if (campaignForm) {
+    campaignForm.closest(".campaign-layout").style.display = isViewer ? "none" : "";
+  }
+
+  // Report/verify buttons: hide for viewer
+  const reportBtns = [elements.generateReportButton, elements.downloadReportButton, elements.downloadPdfButton];
+  reportBtns.forEach((btn) => { if (btn) btn.style.display = isViewer ? "none" : ""; });
 }
 
 function setActiveView(viewName) {
@@ -677,6 +729,12 @@ async function handleLogin(event) {
     state.user = email;
     localStorage.setItem("shadowtrace_token", state.token);
     localStorage.setItem("shadowtrace_user", state.user);
+
+    // Fetch role from /me
+    const me = await apiFetch("/api/v1/auth/me");
+    state.role = me.role;
+    localStorage.setItem("shadowtrace_role", state.role);
+
     setSessionState(true);
     await loadDashboard();
   } catch (error) {
@@ -724,6 +782,7 @@ async function handleCampaignCreate(event) {
 function clearSession() {
   state.token = "";
   state.user = "";
+  state.role = "";
   state.campaigns = [];
   state.overview = null;
   state.incidents = [];
@@ -734,8 +793,10 @@ function clearSession() {
   state.evidence = [];
   state.latestCampaignLink = "";
   state.latestReport = null;
+  state.users = [];
   localStorage.removeItem("shadowtrace_token");
   localStorage.removeItem("shadowtrace_user");
+  localStorage.removeItem("shadowtrace_role");
   setSessionState(false);
   showFeedback("");
   resetVerification();
@@ -785,9 +846,104 @@ elements.campaignSelector.addEventListener("change", async (event) => {
 });
 elements.generateReportButton.addEventListener("click", generateLatestReport);
 elements.downloadReportButton.addEventListener("click", downloadLatestReport);
-navButtons.forEach((button) => {
-  button.addEventListener("click", () => setActiveView(button.dataset.view));
+
+// PDF download handler
+elements.downloadPdfButton.addEventListener("click", async () => {
+  if (!state.selectedCampaignId) {
+    showFeedback("Select a campaign first.", "error");
+    return;
+  }
+  try {
+    setButtonBusy(elements.downloadPdfButton, true, "Preparing...");
+    const response = await fetch(
+      `/api/v1/campaigns/${state.selectedCampaignId}/reports/latest/download/pdf`,
+      { headers: { Authorization: `Bearer ${state.token}` } },
+    );
+    if (response.status === 401) { clearSession(); throw new Error("Session expired."); }
+    if (!response.ok) { throw new Error((await response.text()) || "Could not download PDF."); }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `shadowtrace_campaign_${state.selectedCampaignId}_incident_report.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showFeedback("PDF incident report downloaded successfully.");
+  } catch (error) {
+    showFeedback(error.message, "error");
+  } finally {
+    setButtonBusy(elements.downloadPdfButton, false);
+  }
 });
+
+navButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    setActiveView(button.dataset.view);
+    // Load users on first visit
+    if (button.dataset.view === "users" && !state.users.length) {
+      await loadUsers();
+    }
+  });
+});
+
+// ── Users management ──────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    state.users = await apiFetch("/api/v1/auth/users");
+    renderUsers();
+  } catch (error) {
+    showFeedback(error.message, "error");
+  }
+}
+
+function renderUsers() {
+  if (!state.users.length) {
+    elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="muted-cell">No users found.</td></tr>`;
+    return;
+  }
+  const isSuperAdmin = state.role === "super_admin";
+  elements.usersTableBody.innerHTML = state.users
+    .map(
+      (user) => `
+        <tr>
+          <td>${escapeHtml(user.id)}</td>
+          <td>${escapeHtml(user.full_name)}</td>
+          <td>${escapeHtml(user.email)}</td>
+          <td><span class="role-badge role-${user.role}">${escapeHtml(ROLE_LABELS[user.role] || user.role)}</span></td>
+          <td>${escapeHtml(formatDate(user.created_at))}</td>
+          <td>
+            ${isSuperAdmin && user.email !== state.user ? `
+              <select class="role-change-select" data-user-id="${user.id}">
+                ${ALL_ROLES.map((r) => `<option value="${r}" ${user.role === r ? "selected" : ""}>${ROLE_LABELS[r]}</option>`).join("")}
+              </select>
+            ` : `<span class="muted-cell">—</span>`}
+          </td>
+        </tr>`,
+    )
+    .join("");
+
+  document.querySelectorAll(".role-change-select").forEach((select) => {
+    select.addEventListener("change", async (event) => {
+      const userId = event.target.dataset.userId;
+      const newRole = event.target.value;
+      try {
+        event.target.disabled = true;
+        await apiFetch(`/api/v1/auth/users/${userId}/role`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: newRole }),
+        });
+        showFeedback(`User #${userId} role changed to ${ROLE_LABELS[newRole]}.`);
+        await loadUsers();
+      } catch (error) {
+        showFeedback(error.message, "error");
+        await loadUsers(); // revert UI
+      }
+    });
+  });
+}
 
 renderCampaignLinkPanel("");
 resetVerification();
@@ -803,6 +959,16 @@ setActiveView("overview");
 setSessionState(Boolean(state.token));
 
 if (state.token) {
+  // Re-fetch role on page reload
+  apiFetch("/api/v1/auth/me")
+    .then((me) => {
+      state.role = me.role;
+      localStorage.setItem("shadowtrace_role", state.role);
+      updateRoleBadge();
+      applyRoleVisibility();
+    })
+    .catch(() => {});
+
   loadDashboard().catch((error) => {
     clearSession();
     showFeedback(error.message, "error");
