@@ -506,7 +506,14 @@ async function apiFetch(path, options = {}) {
     throw new Error("Session expired. Sign in again.");
   }
   if (!response.ok) {
-    throw new Error((await response.text()) || `Request failed with status ${response.status}`);
+    let message = `Request failed with status ${response.status}`;
+    try {
+      const body = await response.json();
+      if (body.detail) message = body.detail;
+    } catch {
+      // response wasn't JSON, use default message
+    }
+    throw new Error(message);
   }
   return response.json();
 }

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, require_roles
+from app.api.deps import get_db, require_viewer_plus
 from app.models.campaign import (
     AuditLog,
     EvidenceRecord,
@@ -34,7 +34,7 @@ SUSPICIOUS_EVENT_TYPES = (
 @router.get("/overview", response_model=DashboardOverview)
 def get_dashboard_overview(
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("admin", "analyst")),
+    _: User = Depends(require_viewer_plus),
 ) -> DashboardOverview:
     total_campaigns = db.query(func.count(PhishingCampaign.id)).scalar() or 0
     total_events = db.query(func.count(PhishingEvent.id)).scalar() or 0
@@ -66,7 +66,7 @@ def get_dashboard_overview(
 @router.get("/campaigns", response_model=list[DashboardCampaignSummary])
 def get_dashboard_campaigns(
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("admin", "analyst")),
+    _: User = Depends(require_viewer_plus),
 ) -> list[DashboardCampaignSummary]:
     campaigns = db.query(PhishingCampaign).order_by(PhishingCampaign.created_at.desc()).all()
     campaign_summaries: list[DashboardCampaignSummary] = []
@@ -129,7 +129,7 @@ def get_dashboard_campaigns(
 @router.get("/incidents", response_model=list[DashboardIncidentItem])
 def get_dashboard_incidents(
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("admin", "analyst")),
+    _: User = Depends(require_viewer_plus),
 ) -> list[DashboardIncidentItem]:
     suspicious_events = (
         db.query(PhishingEvent, PhishingCampaign)
@@ -167,7 +167,7 @@ def get_dashboard_incidents(
 def get_dashboard_campaign_timeline(
     campaign_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("admin", "analyst")),
+    _: User = Depends(require_viewer_plus),
 ) -> DashboardCampaignTimeline:
     campaign = db.get(PhishingCampaign, campaign_id)
     if campaign is None:
@@ -230,7 +230,7 @@ def get_dashboard_campaign_timeline(
 @router.get("/audit", response_model=DashboardAuditFeed)
 def get_dashboard_audit_feed(
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("admin", "analyst")),
+    _: User = Depends(require_viewer_plus),
 ) -> DashboardAuditFeed:
     entries = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(50).all()
     total_entries = db.query(func.count(AuditLog.id)).scalar() or 0
